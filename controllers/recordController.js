@@ -10,6 +10,9 @@ const router= express.Router();
 const createRecord =  async (req, res) => {
     console.log(req.body);
     try {
+        if(req.body === null || isNaN(Date.parse(req.body.startDate))|| isNaN(Date.parse(req.body.endDate)) || isNaN(req.body.minCount) || isNaN(req.body.maxCount)) {
+            throw new Error("Invalid request")
+        }
         Record.aggregate(
             [
                 {
@@ -39,11 +42,14 @@ const createRecord =  async (req, res) => {
                 }
             ]
         ).then((results, err) => {
-            if (err) {
+            if (err && results == null) {
+                console.log(err);
+                res.status(500).send(err);
+            } else if(results.length == 0) {
                 console.log(err);
                 const recordsErrorResponse = new Records({
                     code: 1,
-                    msg: "Error while fetching data from DB",
+                    msg: "No records found",
                     records: results
                 })
                 res.status(200).send(recordsErrorResponse);
